@@ -3,7 +3,7 @@ import socket
 
 if (len(sys.argv) != 3):
     print("Quantidade incorreta de argumentos, forma de uso correta:")
-    print(sys.argv[0] + " <ip server> <porta server> <porta cliente>")
+    print(sys.argv[0] + " <ip server> <porta server>")
     quit()
 
 server_ip = sys.argv[1]
@@ -12,7 +12,7 @@ try:
     server_port = int(sys.argv[2])
 except Exception as e:
     print("Porta deve ser um inteiro, forma de uso correta:")
-    print(sys.argv[0] + " <ip server> <porta server> <porta cliente>")
+    print(sys.argv[0] + " <ip server> <porta server>")
     quit()
 
 BUFF = 65536
