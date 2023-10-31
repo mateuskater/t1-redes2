@@ -1,5 +1,7 @@
+from pynput.keyboard import Controller
 import sys
 import socket
+import pickle
 
 BUFF = 65536
 CONNECTMSG = b'oi'
@@ -38,9 +40,23 @@ def main(server_ip, server_port):
     connect(sock, (server_ip, server_port))
 
     # Listens to server
+    keyboard = Controller()
+    oldKeys = []
     while True:
         pack = receive(sock)
-        print(pack.decode())
+        packNum, newKeys = pickle.loads(pack)
+        for key in newKeys:
+            print("pressing")
+            if oldKeys.count(key) == 0:
+                print(key)
+                keyboard.press(key)
+        for key in oldKeys:
+            print("releasing")
+            if newKeys.count(key) == 0:
+                print(key)
+                keyboard.release(key)
+        oldKeys = newKeys
+
 
 if __name__ == '__main__':
     (server_ip, server_port) = checkArguments()
