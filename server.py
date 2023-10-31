@@ -1,9 +1,13 @@
+from pynput import keyboard
 import sys
 import socket
 import time
+import pickle
 
 BUFF = 65536
 CONNECTMSG = b'oi'
+keys = []
+
 def send(sock, clients, package):
     for addr in clients:
         try:
@@ -11,8 +15,6 @@ def send(sock, clients, package):
         except Exception as e:
             #falhou em enviar msg
             pass
-
-
 
 def receive(sock, clients):
     while True:
@@ -27,11 +29,20 @@ def receive(sock, clients):
         except:
             break
 
+def on_press(key):
+    if keys.count(key) == 0:
+        keys.append(key)
+    # if key == keyboard.Key.esc:
+    #     return False
+
+def on_release(key):
+    while keys.count(key) > 0:
+        keys.remove(key)
+
 def main(port, delay):
     # Configures the socket
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
-    sock.settimeout(0.2)
     host_name = socket.gethostname()
     host_ip = socket.gethostbyname(host_name)
     sock_addr = (host_ip,port)
@@ -39,6 +50,11 @@ def main(port, delay):
 
     print("IP: ", host_ip)
     print('ouvindo ',sock_addr)
+
+    # setup keyboard listener
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+    listener.start()
+
     # main loop
     packCount = -1
     client_list = []
@@ -47,7 +63,11 @@ def main(port, delay):
         packCount += 1
 
         # sends next package in the sequence
-        send(sock, client_list, str(packCount).encode())
+        package = (packCount, keys)
+        print("Package:")
+        print(package)
+        package = pickle.dumps(package)
+        send(sock, client_list, package)
 
         # adds new clients
         receive(sock, client_list)
