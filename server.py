@@ -43,6 +43,9 @@ def main(port, delay):
     # Configures the socket
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
+    timeout = min(delay, 0.2)
+    sock.settimeout(timeout)
+    delay = delay - timeout
     host_name = socket.gethostname()
     host_ip = socket.gethostbyname(host_name)
     sock_addr = (host_ip,port)
