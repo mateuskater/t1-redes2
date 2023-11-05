@@ -16,7 +16,7 @@ def send(sock, clients, package):
             #falhou em enviar msg
             pass
 
-def receive(sock, clients):
+def check_new_clients(sock, clients):
     while True:
         try:
             client_msg,addr = sock.recvfrom(BUFF)
@@ -33,6 +33,8 @@ def receive(sock, clients):
 def on_press(key):
     if keys.count(key) == 0:
         keys.append(key)
+        if key == keyboard.Key.esc:
+            print('para de apertar esc')
     # if key == keyboard.Key.esc:
     #     return False
 
@@ -80,7 +82,7 @@ def main(port, delay):
     sock.bind(sock_addr)
 
     print("IP: ", host_ip)
-    print('Endereço do socket: ',sock_addr)
+    print('Porta: ',port)
 
     # setup keyboard listener
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
@@ -90,18 +92,17 @@ def main(port, delay):
     packCount = -1
     client_list = []
     while True:
-        # makes the next package to be sent
-        packCount += 1
-
         # sends next package in the sequence
-        package = (packCount, keys)
-        print(f"Enviando pacote: {package}")
-        # print(package)
-        package = pickle.dumps(package)
-        send(sock, client_list, package)
-
+        if len(keys) > 0:
+            print(len(keys))
+            package = (packCount, keys)
+            print(f"Enviando pacote: {package}")
+            # print(package)
+            package = pickle.dumps(package)
+            send(sock, client_list, package)
+            packCount += 1
         # adds new clients
-        receive(sock, client_list)
+        check_new_clients(sock, client_list)
         time.sleep(delay)
         
 if __name__ == '__main__':

@@ -1,0 +1,37 @@
+<h1 style="text-align: center;">Relatório - Trabalho 1 - Redes 2</h1>
+
+<p>Iago Mello Floriano GRR20196049</p>
+<p>Mateus Kater Pombeiro GRR20190366</p>
+
+<h2>Introdução</h2>
+
+<p>Este relatório tem como objetivo detalhar o que foi feito no trabalho 1 de Redes 2, bem como seu funcionamento, implementação e limitações.
+O trabalho consiste de um servidor de streams, onde existe um host que transmite dados continuamente, e clientes podem conectar a esse host para receber os dados transmitidos, a qualquer momento.
+
+Os dados em questão consistem na informação de teclas sendo pressionadas.
+
+<h2>Implementação</h2>
+
+O trabalho foi implementado usando Python, com a library de socket. O socket é iniciado utilizando o protocolo UDP, então é associado ao socket o IP do servidor.
+Os clientes então utilizam o socket da mesma forma, para se conectar ao servidor pelo seu IP.
+
+Quando um cliente inicia, ele envia uma mensagem de início para o IP fornecido por linha de comando, o do servidor. O servidor roda um laço principal, em que continuamente tenta receber uma mensagem do buffer local. Quando a mensagem é recebida com sucesso, o servidor adiciona o IP do remetente a uma lista de clientes, armazenada localmente. O servidor então itera essa lista de clientes, enviando suas mensagens para todos eles, a cada iteração do laço principal, por meio do método “sendto”.
+
+A mensagem tem formato de tupla. O primeiro item da tupla é a ordem do pacote, e o segundo item é a mensagem enviada.
+
+Antes de cada mensagem ser enviada, é necessário codificá-la para formato bytes. Para isto, é utilizada a library “pickle”, que tem o propósito de converter um objeto Python para um stream de bytes, assim possibilitando o envio e recebimento por socket.
+<br>
+
+<h3>server.py</h3>
+<pre>
+<code class="Python">
+    for live in fodase:
+    oioikkkkk
+    sdfsaifjaidf
+    sidajfisdj
+    try:
+        nao
+    except:
+        sim
+</code>
+</pre>

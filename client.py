@@ -9,8 +9,8 @@ CONNECTMSG = b'oi'
 def connect(sock, server):
     sock.sendto(CONNECTMSG ,server)
 
-def receive(sock):
-    pack,_ = sock.recvfrom(BUFF)
+def receive(sock: socket.socket):
+    pack = sock.recv(BUFF)
     return pack
 
 def checkArguments():
@@ -59,26 +59,25 @@ def main(server_ip, server_port):
     oldKeys = []
     currPack = 0
     lostPacks = 0
-
-    while True:
-        pack = receive(sock)
-        packNum, newKeys = pickle.loads(pack)
-        lostPacks = lostPacks + (packNum - currPack + 1)
-        currPack = packNum
-        print(f"Pacote {packNum} recebido.")
-        for key in newKeys:
-            print("pressing")
-            if oldKeys.count(key) == 0:
-                print(key)
-                keyboard.press(key)
-        for key in oldKeys:
-            print("releasing")
-            if newKeys.count(key) == 0:
-                print(key)
-                keyboard.release(key)
-        oldKeys = newKeys
-    print(f"Pacotes perdidos: {lostPacks}")
-
+    try:
+        while True:
+            pack = receive(sock)
+            packNum, newKeys = pickle.loads(pack)
+            lostPacks = lostPacks + (packNum - currPack + 1)
+            currPack = packNum
+            print(f"Pacote {packNum} recebido.")
+            for key in newKeys:
+                if oldKeys.count(key) == 0:
+                    print(f"pressing {key}")
+                    keyboard.press(key)
+            for key in oldKeys:
+                if newKeys.count(key) == 0:
+                    print(f"releasing {key}")
+                    keyboard.release(key)
+            oldKeys = newKeys
+        print(f"Pacotes perdidos: {lostPacks}")
+    except ConnectionResetError:
+        print("cabou")
 
 if __name__ == '__main__':
     (server_ip, server_port) = checkArguments()
