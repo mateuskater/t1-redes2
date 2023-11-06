@@ -6,9 +6,6 @@ import pickle
 BUFF = 65536
 CONNECTMSG = b'oi'
 
-def connect(sock, server):
-    sock.sendto(CONNECTMSG ,server)
-
 def receive(sock: socket.socket):
     pack = sock.recv(BUFF)
     return pack
@@ -35,26 +32,16 @@ def log(msg):
 
 def main(server_ip, server_port):
     print('Iniciando cliente...')
-    # Configures socket
+    # Configura o socket
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
+    sock.settimeout(20)
     print("Socket iniciado!")
-    # host_name = socket.gethostname()
-    # host_ip = socket.gethostbyname(host_name)
     print('IP: ',server_ip,server_port)
 
-    # Connects to server
-    print(f"Conectando a {server_ip}, porta {server_port}...")
-    try:
-        connect(sock, (server_ip, server_port))
-    except Exception as e:
-        print(e)
-        input()
-        exit()
+    print(f"Ouvindo {server_ip}, na porta {server_port}...")
+    sock.sendto(CONNECTMSG ,(server_ip,server_port)) # envia msg de inicialização
 
-    print("Conectado!")
-
-    # Listens to server
     keyboard = Controller()
     oldKeys = []
     currPack = 0
@@ -63,7 +50,7 @@ def main(server_ip, server_port):
         while True:
             pack = receive(sock)
             packNum, newKeys = pickle.loads(pack)
-            lostPacks = lostPacks + (packNum - currPack + 1)
+            lostPacks = lostPacks + (packNum - currPack - 1)
             currPack = packNum
             print(f"Pacote {packNum} recebido.")
             for key in newKeys:
@@ -75,9 +62,13 @@ def main(server_ip, server_port):
                     print(f"releasing {key}")
                     keyboard.release(key)
             oldKeys = newKeys
+    except TimeoutError:
+        print("A Conexão foi encerrada após atingir 20 segundos de inatividade.")
+        # print('Total de pacotes recebidos: ')
         print(f"Pacotes perdidos: {lostPacks}")
-    except ConnectionResetError:
-        print("cabou")
+    except ConnectionResetError: 
+        print('faiou')
+        
 
 if __name__ == '__main__':
     (server_ip, server_port) = checkArguments()

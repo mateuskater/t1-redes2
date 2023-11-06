@@ -22,16 +22,207 @@ A mensagem tem formato de tupla. O primeiro item da tupla é a ordem do pacote, 
 Antes de cada mensagem ser enviada, é necessário codificá-la para formato bytes. Para isto, é utilizada a library “pickle”, que tem o propósito de converter um objeto Python para um stream de bytes, assim possibilitando o envio e recebimento por socket.
 <br>
 
-<h3>server.py</h3>
+<h1>Log de execução</h1>
+
+
+<h1>Códigos fonte</h1>
+
+<h2>server.py</h2>
 <pre>
 <code class="Python">
-    for live in fodase:
-    oioikkkkk
-    sdfsaifjaidf
-    sidajfisdj
-    try:
-        nao
-    except:
-        sim
+    from pynput import keyboard
+    import sys
+    import socket
+    import time
+    import pickle
+
+    BUFF = 65536
+    CONNECTMSG = b'oi'
+    keys = []
+
+    def send(sock, clients, package):
+        for addr in clients:
+            try:
+                sock.sendto(package,  addr)
+            except Exception as e:
+                #falhou em enviar msg
+                pass
+
+    def check_new_clients(sock, clients):
+        while True:
+            try:
+                client_msg,addr = sock.recvfrom(BUFF)
+                if client_msg == CONNECTMSG:
+                    print('Novo cliente ouvindo: ',addr)
+                    clients.append(addr)
+
+                # if client_msg == b'cabou':
+                # if client_msg == b'ack':
+                # 	apacotes_recebidos+=1
+            except:
+                break
+
+    def on_press(key):
+        if keys.count(key) == 0:
+            keys.append(key)
+            if key == keyboard.Key.esc:
+                print('para de apertar esc')
+        # if key == keyboard.Key.esc:
+        #     return False
+
+    def on_release(key):
+        while keys.count(key) > 0:
+            keys.remove(key)
+
+    def log(msg):
+        print(msg)
+        with open('log.txt', 'w') as file:
+            file.write(msg)
+
+
+    def checkArguments():
+        if (len(sys.argv) != 3):
+            print("Quantidade incorreta de argumentos, forma de uso correta:")
+            print(sys.argv[0] + " <porta> <delay entre mensagens (segundos)>")
+            quit()
+        try:
+            port = int(sys.argv[1])
+        except Exception as e:
+            print("Porta deve ser um inteiro, forma de uso correta:")
+            print(sys.argv[0] + " <porta> <delay entre mensagens (segundos)>")
+            quit()
+        try:
+            delay = float(sys.argv[2])
+        except:
+            print("Delay entre mensagens deve ser um número real, forma de uso correta:")
+            print(sys.argv[0] + " <porta> <delay entre mensagens (segundos)>")
+            quit()
+        return (port, delay)
+
+    def main(port, delay):
+        print("Iniciando Servidor...")
+        # Configures the socket
+        sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
+        timeout = min(delay, 0.2)
+        sock.settimeout(timeout)
+        delay = delay - timeout
+        print("Socket iniciado!")
+        host_name = socket.gethostname()
+        host_ip = socket.gethostbyname(host_name)
+        sock_addr = (host_ip,port)
+        sock.bind(sock_addr)
+
+        print("IP: ", host_ip)
+        print('Porta: ',port)
+
+        # setup keyboard listener
+        listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        listener.start()
+
+        # main loop
+        packCount = 1
+        client_list = []
+        while True:
+            # sends next package in the sequence
+            if len(keys) > 0:
+                print(len(keys))
+                package = (packCount, keys)
+                print(f"Enviando pacote: {package}")
+                # print(package)
+                package = pickle.dumps(package)
+                send(sock, client_list, package)
+                packCount += 1
+            # adds new clients
+            check_new_clients(sock, client_list)
+            time.sleep(delay)
+            
+    if __name__ == '__main__':
+        (port, delay) = checkArguments()
+        main(port, delay)
+
 </code>
+</pre>
+
+<h2>client.py</h2>
+<pre>
+    <code>
+        from pynput.keyboard import Controller
+        import sys
+        import socket
+        import pickle
+
+        BUFF = 65536
+        CONNECTMSG = b'oi'
+
+        def receive(sock: socket.socket):
+            pack = sock.recv(BUFF)
+            return pack
+
+        def checkArguments():
+            if (len(sys.argv) != 3):
+                print("Quantidade incorreta de argumentos, forma de uso correta:")
+                print(sys.argv[0] + " <ip server> <porta server>")
+                quit()
+            try:
+                server_port = int(sys.argv[2])
+            except Exception as e:
+                print("Porta deve ser um inteiro, forma de uso correta:")
+                print(sys.argv[0] + " <ip server> <porta server>")
+                quit()
+            server_ip = sys.argv[1]
+
+            return (server_ip, server_port)
+
+        def log(msg):
+            print(msg)
+            with open('log.txt', 'w') as file:
+                file.write(msg)
+
+        def main(server_ip, server_port):
+            print('Iniciando cliente...')
+            # Configura o socket
+            sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
+            sock.settimeout(20)
+            print("Socket iniciado!")
+            print('IP: ',server_ip,server_port)
+
+            print(f"Ouvindo {server_ip}, na porta {server_port}...")
+            sock.sendto(CONNECTMSG ,(server_ip,server_port)) # envia msg de inicialização
+
+            keyboard = Controller()
+            oldKeys = []
+            currPack = 0
+            lostPacks = 0
+            try:
+                while True:
+                    pack = receive(sock)
+                    packNum, newKeys = pickle.loads(pack)
+                    lostPacks = lostPacks + (packNum - currPack - 1)
+                    currPack = packNum
+                    print(f"Pacote {packNum} recebido.")
+                    for key in newKeys:
+                        if oldKeys.count(key) == 0:
+                            print(f"pressing {key}")
+                            keyboard.press(key)
+                    for key in oldKeys:
+                        if newKeys.count(key) == 0:
+                            print(f"releasing {key}")
+                            keyboard.release(key)
+                    oldKeys = newKeys
+            except TimeoutError:
+                print("A Conexão foi encerrada após atingir 20 segundos de inatividade.")
+                # print('Total de pacotes recebidos: ')
+                print(f"Pacotes perdidos: {lostPacks}")
+            except ConnectionResetError: 
+                print('faiou')
+                
+
+        if __name__ == '__main__':
+            (server_ip, server_port) = checkArguments()
+            main(server_ip, server_port)
+
+
+    </code>
 </pre>

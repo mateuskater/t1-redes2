@@ -21,7 +21,7 @@ def check_new_clients(sock, clients):
         try:
             client_msg,addr = sock.recvfrom(BUFF)
             if client_msg == CONNECTMSG:
-                print('Novo cliente conectado: ',addr)
+                print('Novo cliente ouvindo: ',addr)
                 clients.append(addr)
 
             # if client_msg == b'cabou':
@@ -89,7 +89,7 @@ def main(port, delay):
     listener.start()
 
     # main loop
-    packCount = -1
+    packCount = 1
     client_list = []
     while True:
         # sends next package in the sequence
