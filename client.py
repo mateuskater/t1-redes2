@@ -1,4 +1,4 @@
-from pynput.keyboard import Controller
+from pynput.keyboard import Controller, Key, KeyCode
 import sys
 import socket
 import pickle
@@ -46,13 +46,22 @@ def main(server_ip, server_port):
     oldKeys = []
     currPack = 0
     lostPacks = 0
+    
+    # recebe o primeiro pacote
+    pack = receive(sock)
+    packNum, newKeys = pickle.loads(pack)
+    currPack = packNum
+    firstPack = packNum
+    print(f"Pacote {packNum} recebido.")
     try:
         while True:
-            pack = receive(sock)
-            packNum, newKeys = pickle.loads(pack)
-            lostPacks = lostPacks + (packNum - currPack - 1)
-            currPack = packNum
-            print(f"Pacote {packNum} recebido.")
+            # Para programa se foi apertado ctrl+c no servidor
+            if newKeys.count(Key.ctrl) > 0 and newKeys.count(KeyCode.from_char('c')) > 0:
+                # Solta teclas que ainda estão pressionadas
+                for key in newKeys:
+                    keyboard.release(key)
+                break
+
             for key in newKeys:
                 if oldKeys.count(key) == 0:
                     print(f"pressing {key}")
@@ -62,13 +71,26 @@ def main(server_ip, server_port):
                     print(f"releasing {key}")
                     keyboard.release(key)
             oldKeys = newKeys
+            if len(newKeys) > 0:
+                print(newKeys[0])
+
+            pack = receive(sock)
+            packNum, newKeys = pickle.loads(pack)
+            lostPacks = lostPacks + (packNum - currPack - 1)
+            currPack = packNum
+            print(f"Pacote {packNum} recebido.")
     except TimeoutError:
         print("A Conexão foi encerrada após atingir 20 segundos de inatividade.")
         # print('Total de pacotes recebidos: ')
         print(f"Pacotes perdidos: {lostPacks}")
     except ConnectionResetError: 
         print('faiou')
-        
+    
+    print("Servidor encerrou a transmissão")
+    print(f"{currPack - firstPack - lostPacks} pacotes recebidos")
+    print(f"{lostPacks} pacotes perdidos")
+    print(f"Este cliente começou a receber a partir do pacote {firstPack}")
+    print(f"Último pacote recebido por este cliente foi o de número {currPack}")
 
 if __name__ == '__main__':
     (server_ip, server_port) = checkArguments()

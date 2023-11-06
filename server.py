@@ -1,4 +1,5 @@
 from pynput import keyboard
+from pynput.keyboard import Key, KeyCode
 import sys
 import socket
 import time
@@ -93,18 +94,22 @@ def main(port, delay):
     client_list = []
     while True:
         # sends next package in the sequence
-        if len(keys) > 0:
-            print(len(keys))
-            package = (packCount, keys)
-            print(f"Enviando pacote: {package}")
-            # print(package)
-            package = pickle.dumps(package)
-            send(sock, client_list, package)
-            packCount += 1
+        package = (packCount, keys)
+        print(f"Enviando pacote: {package}")
+        package = pickle.dumps(package)
+        send(sock, client_list, package)
+        packCount += 1
+        # Encerra envio caso tenha enviado ctrl+c
+        if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
+            break
         # adds new clients
         check_new_clients(sock, client_list)
         time.sleep(delay)
-        
+    listener.stop()
+    print("Encerrando servidor")
+    print(f"{packCount} pacotes foram enviados")
+    print(f"{len(client_list)} clientes foram adicionados a lista de envios")
+
 if __name__ == '__main__':
     (port, delay) = checkArguments()
     main(port, delay)
