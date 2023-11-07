@@ -87,18 +87,22 @@ def main(port, delay):
     packCount = 1
     client_list = []
     while True:
-        # envia proximo pacote
-        package = (packCount, keys)
-        log(f">> Enviando pacote: {package}")
-        package = pickle.dumps(package) # codifica o pacote
-        send(sock, client_list, package) # envia o pacote
-        packCount += 1 # incrementa o contador de pacotes
-        # Encerra envio caso tenha enviado ctrl+c
-        if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
+        try:
+            # envia proximo pacote
+            package = (packCount, keys)
+            log(f">> Enviando pacote: {package}")
+            package = pickle.dumps(package) # codifica o pacote
+            send(sock, client_list, package) # envia o pacote
+            packCount += 1 # incrementa o contador de pacotes
+            # Encerra envio caso tenha enviado ctrl+c
+            if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
+                break
+            # adiciona novos clientes
+            check_new_clients(sock, client_list)
+            time.sleep(delay)
+        except KeyboardInterrupt:
+            send(sock, client_list, pickle.dumps((packCount,[Key.ctrl,KeyCode.from_char('c')]))) # envia o pacote
             break
-        # adiciona novos clientes
-        check_new_clients(sock, client_list)
-        time.sleep(delay)
     listener.stop()
     log("")
     log('================SERVIDOR ENCERRADO================')
