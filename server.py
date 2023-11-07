@@ -9,7 +9,16 @@ BUFF = 65536
 CONNECTMSG = b'oi'
 keys = []
 
-def send(sock, clients, package):
+def on_press(key) -> None:
+    if keys.count(key) == 0:
+        keys.append(key)
+
+def on_release(key) -> None:
+    while keys.count(key) > 0:
+        keys.remove(key)
+
+def send(sock, clients, package) -> None:
+    '''Envia mensagem para todos os clientes na lista'''
     for addr in clients:
         try:
             sock.sendto(package,  addr)
@@ -17,7 +26,8 @@ def send(sock, clients, package):
             #falhou em enviar msg
             pass
 
-def check_new_clients(sock, clients):
+def check_new_clients(sock, clients) -> None:
+    '''Checa se existem novos clientes ouvindo o servidor'''
     try: # Tenta receber mensagem
         client_msg,addr = sock.recvfrom(BUFF)
         if client_msg == CONNECTMSG:
@@ -26,17 +36,8 @@ def check_new_clients(sock, clients):
     except: # Caso falhe, não existem clientes novos
         return
 
-def on_press(key):
-    if keys.count(key) == 0:
-        keys.append(key)
-        # if key == keyboard.Key.esc:
-        #     print('para de apertar esc')
-
-def on_release(key):
-    while keys.count(key) > 0:
-        keys.remove(key)
-
 def checkArguments():
+    '''Trata os argumentos passados na linha de comando'''
     if (len(sys.argv) != 3):
         print("Quantidade incorreta de argumentos, forma de uso correta:")
         print(sys.argv[0] + " <porta> <delay entre mensagens (segundos)>")
@@ -80,22 +81,26 @@ def main(port, delay):
     packCount = 1
     client_list = []
     while True:
-        # envia proximo pacote
-        package = (packCount, keys)
-        print(f"Enviando pacote: {package}")
-        package = pickle.dumps(package)
-        send(sock, client_list, package)
-        packCount += 1
-        # Encerra envio caso tenha enviado ctrl+c
-        if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
+        try:
+            # envia proximo pacote
+            package = (packCount, keys)
+            print(f"Enviando pacote: {package}")
+            package = pickle.dumps(package) # codifica o pacote
+            send(sock, client_list, package) # envia o pacote
+            packCount += 1 # incrementa o contador de pacotes
+            # Encerra envio caso tenha enviado ctrl+c
+            if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
+                break
+            # adiciona novos clientes
+            check_new_clients(sock, client_list)
+            time.sleep(delay)
+        except KeyboardInterrupt: # Caso aperte ctrl+c
             break
-        # adiciona novos clientes
-        check_new_clients(sock, client_list)
-        time.sleep(delay)
     listener.stop()
-    print("Encerrando servidor")
+    print()
+    print('================SERVIDOR ENCERRADO================')
     print(f"{packCount} pacotes foram enviados")
-    print(f"{len(client_list)} clientes foram adicionados a lista de envios")
+    print(f"{len(client_list)} clientes foram adicionados à lista de envios")
 
 if __name__ == '__main__':
     (port, delay) = checkArguments()

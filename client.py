@@ -5,8 +5,10 @@ import pickle
 
 BUFF = 65536
 CONNECTMSG = b'oi'
+TIMEOUT = 20
 
-def checkArguments():
+def checkArguments() -> tuple:
+    '''Trata os argumentos passados na linha de comando'''
     if (len(sys.argv) != 3):
         print("Quantidade incorreta de argumentos, forma de uso correta:")
         print(sys.argv[0] + " <ip server> <porta server>")
@@ -26,7 +28,7 @@ def main(server_ip, server_port):
     # Configura o socket
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
-    sock.settimeout(20)
+    sock.settimeout(TIMEOUT)
     print("Socket iniciado!")
     print('IP: ',server_ip,server_port)
 
@@ -40,12 +42,12 @@ def main(server_ip, server_port):
     
     # recebe o primeiro pacote
     pack = sock.recv(BUFF)
-    packNum, newKeys = pickle.loads(pack)
+    packNum, newKeys = pickle.loads(pack) # decodifica o pacote
     currPack = packNum
     firstPack = packNum
     print(f"Pacote {packNum} recebido.")
-    try:
-        while True:
+    while True:
+        try:
             # Para programa se foi apertado ctrl+c no servidor
             if newKeys.count(Key.ctrl) > 0 and newKeys.count(KeyCode.from_char('c')) > 0:
                 # Solta teclas que ainda estão pressionadas
@@ -53,16 +55,16 @@ def main(server_ip, server_port):
                     keyboard.release(key)
                 break
 
-            for key in newKeys:
+            for key in newKeys: # Pressiona as teclas que foram recebidas
                 if oldKeys.count(key) == 0:
                     print(f"pressing {key}")
                     keyboard.press(key)
-            for key in oldKeys:
+            for key in oldKeys: # Solta as teclas que foram recebidas
                 if newKeys.count(key) == 0:
                     print(f"releasing {key}")
                     keyboard.release(key)
             oldKeys = newKeys
-            if len(newKeys) > 0:
+            if len(newKeys) > 0: # Imprime as teclas sendo pressionadas
                 print(newKeys[0])
 
             pack = sock.recv(BUFF) # Recebe o pacote
@@ -70,14 +72,10 @@ def main(server_ip, server_port):
             lostPacks = lostPacks + (packNum - currPack - 1) # Contagem de pacotes perdidos, levando em conta o numero de sequência
             currPack = packNum # Atualiza o número de sequência do pacote
             print(f"Pacote {packNum} recebido.")
-    except TimeoutError:
-        print("A Conexão foi encerrada após atingir 20 segundos de inatividade.")
-        # print('Total de pacotes recebidos: ')
-        print(f"Pacotes perdidos: {lostPacks}")
-    except ConnectionResetError: 
-        print('faiou')
-    
-    print("Servidor encerrou a transmissão")
+        except TimeoutError:
+            print(f"A Conexão foi encerrada após atingir {str(TIMEOUT)} segundos de inatividade.")
+    print()
+    print('=================CLIENTE ENCERRADO=================')
     print(f"{currPack - firstPack - lostPacks} pacotes recebidos")
     print(f"{lostPacks} pacotes perdidos")
     print(f"Este cliente começou a receber a partir do pacote {firstPack}")
