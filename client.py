@@ -6,10 +6,6 @@ import pickle
 BUFF = 65536
 CONNECTMSG = b'oi'
 
-def receive(sock: socket.socket):
-    pack = sock.recv(BUFF)
-    return pack
-
 def checkArguments():
     if (len(sys.argv) != 3):
         print("Quantidade incorreta de argumentos, forma de uso correta:")
@@ -24,11 +20,6 @@ def checkArguments():
     server_ip = sys.argv[1]
 
     return (server_ip, server_port)
-
-def log(msg):
-    print(msg)
-    with open('log.txt', 'w') as file:
-        file.write(msg)
 
 def main(server_ip, server_port):
     print('Iniciando cliente...')
@@ -48,7 +39,7 @@ def main(server_ip, server_port):
     lostPacks = 0
     
     # recebe o primeiro pacote
-    pack = receive(sock)
+    pack = sock.recv(BUFF)
     packNum, newKeys = pickle.loads(pack)
     currPack = packNum
     firstPack = packNum
@@ -74,10 +65,10 @@ def main(server_ip, server_port):
             if len(newKeys) > 0:
                 print(newKeys[0])
 
-            pack = receive(sock)
-            packNum, newKeys = pickle.loads(pack)
-            lostPacks = lostPacks + (packNum - currPack - 1)
-            currPack = packNum
+            pack = sock.recv(BUFF) # Recebe o pacote
+            packNum, newKeys = pickle.loads(pack) # Decodifica o pacote
+            lostPacks = lostPacks + (packNum - currPack - 1) # Contagem de pacotes perdidos, levando em conta o numero de sequência
+            currPack = packNum # Atualiza o número de sequência do pacote
             print(f"Pacote {packNum} recebido.")
     except TimeoutError:
         print("A Conexão foi encerrada após atingir 20 segundos de inatividade.")
