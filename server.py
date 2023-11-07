@@ -18,36 +18,23 @@ def send(sock, clients, package):
             pass
 
 def check_new_clients(sock, clients):
-    while True:
-        try:
-            client_msg,addr = sock.recvfrom(BUFF)
-            if client_msg == CONNECTMSG:
-                print('Novo cliente ouvindo: ',addr)
-                clients.append(addr)
-
-            # if client_msg == b'cabou':
-            # if client_msg == b'ack':
-            # 	apacotes_recebidos+=1
-        except:
-            break
+    try: # Tenta receber mensagem
+        client_msg,addr = sock.recvfrom(BUFF)
+        if client_msg == CONNECTMSG:
+            print('Novo cliente ouvindo: ',addr)
+            clients.append(addr)
+    except: # Caso falhe, não existem clientes novos
+        return
 
 def on_press(key):
     if keys.count(key) == 0:
         keys.append(key)
-        if key == keyboard.Key.esc:
-            print('para de apertar esc')
-    # if key == keyboard.Key.esc:
-    #     return False
+        # if key == keyboard.Key.esc:
+        #     print('para de apertar esc')
 
 def on_release(key):
     while keys.count(key) > 0:
         keys.remove(key)
-
-def log(msg):
-    print(msg)
-    with open('log.txt', 'w') as file:
-        file.write(msg)
-
 
 def checkArguments():
     if (len(sys.argv) != 3):
@@ -70,7 +57,7 @@ def checkArguments():
 
 def main(port, delay):
     print("Iniciando Servidor...")
-    # Configures the socket
+    # Configura o socket
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF)
     timeout = min(delay, 0.2)
@@ -93,7 +80,7 @@ def main(port, delay):
     packCount = 1
     client_list = []
     while True:
-        # sends next package in the sequence
+        # envia proximo pacote
         package = (packCount, keys)
         print(f"Enviando pacote: {package}")
         package = pickle.dumps(package)
@@ -102,7 +89,7 @@ def main(port, delay):
         # Encerra envio caso tenha enviado ctrl+c
         if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
             break
-        # adds new clients
+        # adiciona novos clientes
         check_new_clients(sock, client_list)
         time.sleep(delay)
     listener.stop()
