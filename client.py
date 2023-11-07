@@ -5,8 +5,13 @@ import pickle
 
 BUFF = 65536
 CONNECTMSG = b'oi'
-TIMEOUT = 20
+TIMEOUT = 1
 
+def log(msg):
+    print(msg)
+    with open() as file:
+        file.write(msg)
+        
 def checkArguments() -> tuple:
     '''Trata os argumentos passados na linha de comando'''
     if (len(sys.argv) != 3):
@@ -72,7 +77,7 @@ def main(server_ip, server_port):
             lostPacks = lostPacks + (packNum - currPack - 1) # Contagem de pacotes perdidos, levando em conta o numero de sequência
             currPack = packNum # Atualiza o número de sequência do pacote
             print(f"Pacote {packNum} recebido.")
-        except TimeoutError:
+        except (socket.timeout, TimeoutError):
             print(f"A Conexão foi encerrada após atingir {str(TIMEOUT)} segundos de inatividade.")
     print()
     print('=================CLIENTE ENCERRADO=================')

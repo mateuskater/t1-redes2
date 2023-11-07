@@ -9,6 +9,11 @@ BUFF = 65536
 CONNECTMSG = b'oi'
 keys = []
 
+def log(msg):
+    print(msg)
+    with open() as file:
+        file.write(msg)
+        
 def on_press(key) -> None:
     if keys.count(key) == 0:
         keys.append(key)
@@ -81,21 +86,18 @@ def main(port, delay):
     packCount = 1
     client_list = []
     while True:
-        try:
-            # envia proximo pacote
-            package = (packCount, keys)
-            print(f"Enviando pacote: {package}")
-            package = pickle.dumps(package) # codifica o pacote
-            send(sock, client_list, package) # envia o pacote
-            packCount += 1 # incrementa o contador de pacotes
-            # Encerra envio caso tenha enviado ctrl+c
-            if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
-                break
-            # adiciona novos clientes
-            check_new_clients(sock, client_list)
-            time.sleep(delay)
-        except KeyboardInterrupt: # Caso aperte ctrl+c
+        # envia proximo pacote
+        package = (packCount, keys)
+        print(f"Enviando pacote: {package}")
+        package = pickle.dumps(package) # codifica o pacote
+        send(sock, client_list, package) # envia o pacote
+        packCount += 1 # incrementa o contador de pacotes
+        # Encerra envio caso tenha enviado ctrl+c
+        if keys.count(Key.ctrl) > 0 and keys.count(KeyCode.from_char('c')) > 0:
             break
+        # adiciona novos clientes
+        check_new_clients(sock, client_list)
+        time.sleep(delay)
     listener.stop()
     print()
     print('================SERVIDOR ENCERRADO================')
