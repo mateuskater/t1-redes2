@@ -22,13 +22,21 @@ A mensagem tem formato de tupla. O primeiro item da tupla é a ordem do pacote, 
 Antes de cada mensagem ser enviada, é necessário codificá-la para formato bytes. Para isto, é utilizada a library “pickle”, que tem o propósito de converter um objeto Python para um stream de bytes, assim possibilitando o envio e recebimento por socket.
 <br>
 
-<img src="./src/diagrama.jpeg" alt="Fluxograma"></img>
+<h2>Diagrama do funcionamento do server</h2>
+<img src="./src/server.png" alt="Fluxograma Server"></img>
+
+<h2>Diagrama do funcionamento do cliente</h2>
+<img src="./src/client.png" alt="Fluxograma Cliente"></img>
+
+<h2>Diagrama do funcionamento da inscrição de clientes ao servidor</h2>
+<img src="./src/subscription.png" alt="Fluxograma Inscrições"></img>
+
 <h1>Log de execução</h1>
 
 
 <h1>Códigos fonte</h1>
 
-<h2><a href="./server.py.txt">server.py</a></h2>
+<h2><a href="./src/server.py.txt">server.py</a></h2>
 <pre>
 <code class="Python">
     from pynput import keyboard
@@ -142,7 +150,7 @@ Antes de cada mensagem ser enviada, é necessário codificá-la para formato byt
     </code>
 </pre>
 
-<h2><a href="./client.py">client.py</a></h2>
+<h2><a href="./src/client.py.txt">client.py</a></h2>
 <pre>
     <code>
         from pynput.keyboard import Controller, Key, KeyCode
