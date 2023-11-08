@@ -6,7 +6,7 @@ import pickle
 
 BUFF = 65536
 CONNECTMSG = b'oi'
-TIMEOUT = 1
+TIMEOUT = 20
 LOGFILENAME = f"{time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())}_client_log.txt"
 
 def log(msg):
