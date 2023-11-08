@@ -76,6 +76,7 @@ def main(server_ip, server_port):
             log(f"<< Pacote {(packNum, newKeys)} recebido.")
         except (socket.timeout, TimeoutError):
             log(f"A Conexão foi encerrada após atingir {str(TIMEOUT)} segundos de inatividade.")
+            break
     log("")
     log('=================CLIENTE ENCERRADO=================')
     log(f"{currPack - firstPack - lostPacks} pacotes recebidos")
